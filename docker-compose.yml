@@ -1,4 +1,9 @@
 services:
+  checkout-api:
+    build: .
+    environment: ["OTEL_SERVICE_NAME=checkout-api", "OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318"]
+    ports: ["8080:8080"]
+    depends_on: [otel-collector]
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.137.0
     command: ["--config=/etc/otelcol/config.yaml"]
@@ -18,3 +23,8 @@ services:
     environment: ["GF_AUTH_ANONYMOUS_ENABLED=true", "GF_AUTH_ANONYMOUS_ORG_ROLE=Admin"]
     ports: ["3000:3000"]
     depends_on: [prometheus, tempo]
+  loki:
+    image: grafana/loki:3.6.2
+    command: ["-config.file=/etc/loki/config.yaml"]
+    volumes: ["./loki.yaml:/etc/loki/config.yaml:ro"]
+    ports: ["3100:3100"]

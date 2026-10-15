@@ -1,0 +1,1 @@
+{"name":"otel-stack-lab-service","private":true,"type":"module","scripts":{"start":"node --import ./services/instrumentation.mjs services/server.mjs","test":"node --test services/*.test.mjs"},"dependencies":{"@opentelemetry/api":"1.9.1","@opentelemetry/auto-instrumentations-node":"0.81.0","@opentelemetry/exporter-trace-otlp-http":"0.223.0","@opentelemetry/sdk-node":"0.223.0"}}
