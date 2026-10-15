@@ -1,28 +1,29 @@
 # otel-stack-lab
-A reproducible OpenTelemetry laboratory with an OTLP collector, Prometheus, Tempo, and Grafana. It uses pinned images, bounded collector memory, batching, trace export, and Prometheus metric export.
 
-```bash
-docker compose up -d
+A local observability lab with OpenTelemetry Collector, Prometheus, Tempo, Loki, Grafana, and an instrumented Node service.
+
+```sh
+docker compose up --build
 ./scripts/validate.sh
 ```
 
-## Data flow
-```mermaid
-flowchart LR
-  Services -->|OTLP| Collector
-  Collector --> Tempo
-  Collector --> Prometheus
-  Tempo --> Grafana
-  Prometheus --> Grafana
-  Services -->|JSON logs| Loki
-  Loki --> Grafana
-```
-The sample checkout service emits OpenTelemetry spans over OTLP, JSON logs containing trace IDs, and Prometheus request/failure counters. Inject a reproducible incident with:
+The checkout service exports spans over OTLP, exposes Prometheus counters, and writes JSON logs containing the active trace ID. Inject a known failure with:
 
 ```sh
-curl -i -X POST -H 'x-failure-mode: payment-timeout' localhost:8080/checkout
+curl -i -X POST \
+  -H 'x-failure-mode: payment-timeout' \
+  localhost:8080/checkout
 ```
 
-Use Tempo for the trace, Prometheus for the error counter, Loki for correlated JSON logs, and Grafana as the shared investigation surface.
+Prometheus evaluates a 99% checkout SLO from `alerts.yml`; `runbooks/checkout-errors.md` walks through the incident. Tempo stores traces. The collector tails the service's JSON log file and exports it to Loki. Grafana starts with all three data sources provisioned.
 
-The example SLO allows a 1% checkout error rate over five minutes. Prometheus evaluates the alert in `alerts.yml`; the response exercise is in `runbooks/checkout-errors.md`.
+```mermaid
+flowchart LR
+  Service -->|OTLP traces| Collector
+  Collector --> Tempo
+  Service -->|/metrics| Prometheus
+  Service -->|JSON logs| Collector
+  Collector --> Loki
+  Tempo --> Grafana
+  Prometheus --> Grafana
+```
