@@ -1,0 +1,10 @@
+groups:
+  - name: checkout-slo
+    rules:
+      - alert: CheckoutErrorBudgetBurn
+        expr: rate(checkout_failures_total[5m]) / clamp_min(rate(checkout_requests_total[5m]), 0.001) > 0.01
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: Checkout errors exceed the 99% availability objective
+          runbook: runbooks/checkout-errors.md
